@@ -29,14 +29,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader(SecurityConstants.AUTHORIZATION_HEADER);
-        if (authorizationHeader == null
-                || !authorizationHeader.startsWith(SecurityConstants.BEARER_PREFIX)) {
+        if (request.getServletPath().startsWith("/attendify/v1/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authorizationHeader.substring(SecurityConstants.BEARER_PREFIX.length());
+        final String authHeader = request.getHeader(SecurityConstants.AUTHORIZATION_HEADER);
+        if (authHeader == null || !authHeader.startsWith(SecurityConstants.BEARER_PREFIX)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        final String jwt = authHeader.substring(SecurityConstants.BEARER_PREFIX.length());
 
         final String username;
         try {

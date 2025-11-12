@@ -20,4 +20,5 @@ application:
     security:
         jwt:
             secret-key: iDf5B8bkGtAIhB0IHnSzomfqHpM7wtfuAkdomX9aY5AN8yNuXZNZzz8c2B6pgGUK52mfgbnvqL1dFtId9IwnRQ==
-            expiration-ms: 60000 #a minute
+            access-expiration-ms: 60000 #1 minute
+            refresh-expiration-ms: 604800000 #7 days

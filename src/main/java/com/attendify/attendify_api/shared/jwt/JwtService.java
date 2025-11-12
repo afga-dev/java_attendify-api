@@ -9,6 +9,7 @@ import javax.crypto.SecretKey;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.attendify.attendify_api.auth.model.TokenPurpose;
 import com.attendify.attendify_api.shared.config.JwtProperties;
 
 import io.jsonwebtoken.Claims;
@@ -32,15 +33,11 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        try {
-            return Jwts.parser()
-                    .verifyWith(getSignInKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-        } catch (Exception err) {
-            throw new IllegalArgumentException("Invalidad JWT token", err);
-        }
+        return Jwts.parser()
+                .verifyWith(getSignInKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private SecretKey getSignInKey() {
@@ -48,12 +45,15 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyByte);
     }
 
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(Map.of(), userDetails);
+    public String generateToken(UserDetails userDetails, TokenPurpose tokenPurpose) {
+        return generateToken(Map.of(), userDetails, tokenPurpose);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtProperties.getExpirationMs());
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, TokenPurpose tokenPurpose) {
+        return switch (tokenPurpose) {
+            case ACCESS -> buildToken(extraClaims, userDetails, jwtProperties.getAccessExpirationMs());
+            case REFRESH -> buildToken(extraClaims, userDetails, jwtProperties.getRefreshExpirationMs());
+        };
     }
 
     private String buildToken(

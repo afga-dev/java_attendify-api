@@ -1,8 +1,13 @@
 package com.attendify.attendify_api.user.model;
 
-import java.util.HashSet;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
+import com.attendify.attendify_api.auth.model.Token;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -14,6 +19,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +47,7 @@ public class User extends AuditableEntity {
     @Email
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     @NotBlank
     private String password;
@@ -51,5 +58,9 @@ public class User extends AuditableEntity {
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role", nullable = false)
     @NotNull
-    private Set<Role> roles = new HashSet<>();
+    private Set<Role> roles = EnumSet.noneOf(Role.class);
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Token> tokens;
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final AuthenticationProvider authenticationProvider;
@@ -40,7 +42,7 @@ public class SecurityConfig {
                                         corsConfiguration.setAllowedMethods(
                                                         List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                                         corsConfiguration.setAllowedHeaders(List.of("*"));
-                                        corsConfiguration.setAllowCredentials(false);
+                                        corsConfiguration.setAllowCredentials(true);
                                         return corsConfiguration;
                                 }))
                                 .authorizeHttpRequests(auth -> auth
@@ -60,8 +62,7 @@ public class SecurityConfig {
                                                         var body = ErrorResponse.of(
                                                                         HttpServletResponse.SC_UNAUTHORIZED,
                                                                         "Unauthorized",
-                                                                        "Invalid or expired token",
-                                                                        request.getRequestURI());
+                                                                        "Invalid or expired token");
 
                                                         response.getWriter()
                                                                         .write(objectMapper.writeValueAsString(body));
@@ -73,8 +74,7 @@ public class SecurityConfig {
                                                         var body = ErrorResponse.of(
                                                                         HttpServletResponse.SC_FORBIDDEN,
                                                                         "Forbidden",
-                                                                        "You don’t have permission to access this resource",
-                                                                        request.getRequestURI());
+                                                                        "You don’t have permission to access this resource");
 
                                                         response.getWriter()
                                                                         .write(objectMapper.writeValueAsString(body));

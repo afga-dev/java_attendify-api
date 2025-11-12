@@ -1,6 +1,5 @@
 package com.attendify.attendify_api.shared.exception;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,11 +22,11 @@ public class GlobalExceptionHandler {
                                 .findFirst()
                                 .orElse("Invalid input data");
 
+                var status = HttpStatus.BAD_REQUEST;
                 ErrorResponse errorResponse = ErrorResponse.of(
-                                HttpStatus.BAD_REQUEST.value(),
-                                "Bad Request",
-                                message,
-                                request.getRequestURI());
+                                status.value(),
+                                status.getReasonPhrase(),
+                                message);
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
@@ -36,29 +35,24 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ErrorResponse> handleBadCredentialsException(
                         BadCredentialsException ex,
                         HttpServletRequest request) {
+                var status = HttpStatus.UNAUTHORIZED;
                 ErrorResponse errorResponse = ErrorResponse.of(
-                                HttpStatus.UNAUTHORIZED.value(),
-                                "Unauthorized",
-                                "Invalid email or password.",
-                                request.getRequestURI());
+                                status.value(),
+                                status.getReasonPhrase(),
+                                "Invalid email or password");
 
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
 
-        @ExceptionHandler(DataIntegrityViolationException.class)
-        public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
-                        DataIntegrityViolationException ex,
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+                        IllegalArgumentException ex,
                         HttpServletRequest request) {
-                String message = "Database integrity constraint was violated";
-
-                if (ex.getMessage().toLowerCase().contains("users_email_key"))
-                        message = "The email address is already in use";
-
+                var status = HttpStatus.CONFLICT;
                 ErrorResponse errorResponse = ErrorResponse.of(
-                                HttpStatus.CONFLICT.value(),
-                                "Conflict",
-                                message,
-                                request.getRequestURI());
+                                status.value(),
+                                status.getReasonPhrase(),
+                                "Email is already in use");
 
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
