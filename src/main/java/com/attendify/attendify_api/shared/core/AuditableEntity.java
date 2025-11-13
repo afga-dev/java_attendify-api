@@ -1,4 +1,4 @@
-package com.attendify.attendify_api.user.model;
+package com.attendify.attendify_api.shared.core;
 
 import java.time.LocalDateTime;
 

@@ -12,6 +12,7 @@ import com.attendify.attendify_api.auth.dto.AuthenticationResponse;
 import com.attendify.attendify_api.auth.dto.LoginRequest;
 import com.attendify.attendify_api.auth.dto.RegisterRequest;
 import com.attendify.attendify_api.auth.service.AuthenticationService;
+import com.attendify.attendify_api.shared.jwt.SecurityConstants;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthenticationResponse> refresh(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<AuthenticationResponse> refresh(
+            @RequestHeader(SecurityConstants.AUTHORIZATION_HEADER) String authHeader) {
         AuthenticationResponse authResponse = authenticationService.refresh(authHeader);
         return ResponseEntity.ok(authResponse);
     }

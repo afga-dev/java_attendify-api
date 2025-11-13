@@ -37,7 +37,7 @@ public class LogoutController {
                         }
                         case INVALID_HEADER -> {
                                 return buildResponse(HttpStatus.BAD_REQUEST,
-                                                "Missing or malformed Authorization header");
+                                                "Missing or malformed authorization header");
                         }
                 }
                 return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");

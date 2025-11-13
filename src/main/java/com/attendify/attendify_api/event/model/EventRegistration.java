@@ -1,20 +1,18 @@
-package com.attendify.attendify_api.auth.model;
+package com.attendify.attendify_api.event.model;
 
 import com.attendify.attendify_api.shared.core.AuditableEntity;
 import com.attendify.attendify_api.user.model.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,35 +26,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "tokens", indexes = {
-        @Index(name = "index_token_value", columnList = "token")
+@Table(name = "event_registrations", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user_id", "event_id" })
 })
-public class Token extends AuditableEntity {
+public class EventRegistration extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "token_id")
+    @Column(name = "event_registration_id")
     private Long id;
-
-    @Column(unique = true, nullable = false, length = 512)
-    private String token;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TokenType tokenType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TokenPurpose tokenPurpose;
-
-    @NotNull
-    @Column(nullable = false)
-    private Boolean revoked;
-
-    @NotNull
-    @Column(nullable = false)
-    private Boolean expired;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "event_id", nullable = false)
+    private Event event;
+
+    @NotNull
+    @Column(nullable = false)
+    Boolean checkedIn;
 }

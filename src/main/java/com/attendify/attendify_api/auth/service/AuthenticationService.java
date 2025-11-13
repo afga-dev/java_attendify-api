@@ -101,7 +101,7 @@ public class AuthenticationService {
 
         public AuthenticationResponse refresh(String authHeader) {
                 if (authHeader == null || !authHeader.startsWith(SecurityConstants.BEARER_PREFIX)) {
-                        throw new BadCredentialsException("Missing or malformed Authorization header");
+                        throw new BadCredentialsException("Missing or malformed authorization header");
                 }
 
                 String refreshToken = authHeader.substring(SecurityConstants.BEARER_PREFIX.length());
@@ -118,12 +118,13 @@ public class AuthenticationService {
                                 .orElseThrow(() -> new BadCredentialsException("Refresh token not found"));
 
                 var userEntity = userRepository.findByEmail(username)
-                                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                                .orElseThrow(() -> new UsernameNotFoundException(
+                                                "User not found with email: " + username));
                 var userDetails = getUser(userEntity);
 
-                if (storedToken.isExpired() || storedToken.isRevoked()
+                if (storedToken.getExpired() || storedToken.getRevoked()
                                 || !jwtService.isTokenValid(refreshToken, userDetails)) {
-                        throw new BadCredentialsException("Refresh token is no longer valid. Please log in again.");
+                        throw new BadCredentialsException("Refresh token is no longer valid");
                 }
 
                 storedToken.setExpired(true);

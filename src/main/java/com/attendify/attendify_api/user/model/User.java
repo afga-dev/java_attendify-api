@@ -1,11 +1,11 @@
 package com.attendify.attendify_api.user.model;
 
-import java.util.EnumSet;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.attendify.attendify_api.auth.model.Token;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.attendify.attendify_api.event.model.EventRegistration;
+import com.attendify.attendify_api.shared.core.AuditableEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -43,24 +43,27 @@ public class User extends AuditableEntity {
     @Column(name = "user_id")
     private Long id;
 
-    @Column(unique = true, nullable = false)
     @Email
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @JsonIgnore
-    @Column(nullable = false)
     @NotBlank
+    @Column(nullable = false)
     private String password;
 
     @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role", nullable = false)
     @NotNull
-    private Set<Role> roles = EnumSet.noneOf(Role.class);
+    @Column(name = "role", nullable = false)
+    private Set<Role> roles = new HashSet<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Token> tokens;
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Token> tokens = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<EventRegistration> registrations = new HashSet<>();
 }

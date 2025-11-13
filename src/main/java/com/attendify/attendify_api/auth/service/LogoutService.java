@@ -28,7 +28,7 @@ public class LogoutService {
             return LogoutResult.TOKEN_NOT_FOUND;
 
         var refreshToken = refreshTokenOpt.get();
-        if (refreshToken.isRevoked() || refreshToken.isExpired())
+        if (refreshToken.getRevoked() || refreshToken.getExpired())
             return LogoutResult.ALREADY_REVOKED;
 
         refreshToken.setRevoked(true);

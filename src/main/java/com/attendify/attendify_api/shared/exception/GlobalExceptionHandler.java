@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
                 ErrorResponse errorResponse = ErrorResponse.of(
                                 status.value(),
                                 status.getReasonPhrase(),
-                                "Invalid email or password");
+                                ex.getMessage());
 
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
                 ErrorResponse errorResponse = ErrorResponse.of(
                                 status.value(),
                                 status.getReasonPhrase(),
-                                "Email is already in use");
+                                ex.getMessage());
 
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
