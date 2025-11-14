@@ -11,25 +11,25 @@ import lombok.Data;
 
 @Data
 public class EventRequestDTO {
-    @NotBlank
+    @NotBlank(message = "Title is required")
     private String title;
 
-    @NotBlank
+    @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull
+    @NotNull(message = "Start date is required")
     private LocalDateTime startDate;
 
-    @NotNull
+    @NotNull(message = "End date is required")
     private LocalDateTime endDate;
 
-    @NotBlank
+    @NotBlank(message = "Location is required")
     private String location;
 
-    @NotNull
+    @NotNull(message = "Capacity is required")
     private Integer capacity;
 
-    @NotNull
+    @NotNull(message = "Status is required")
     private EventStatus status;
 
     private Set<Long> categoryId;

@@ -1,0 +1,82 @@
+package com.attendify.attendify_api.event.mapper;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import com.attendify.attendify_api.event.dto.EventRequestDTO;
+import com.attendify.attendify_api.event.dto.EventResponseDTO;
+import com.attendify.attendify_api.event.dto.EventSimpleDTO;
+import com.attendify.attendify_api.event.model.Event;
+import com.attendify.attendify_api.user.model.User;
+import com.attendify.attendify_api.event.model.Category;
+
+@Component
+public class EventMapper {
+        public Event toEntity(
+                        EventRequestDTO dto,
+                        User createdBy,
+                        Set<Category> categories) {
+                return Event.builder()
+                                .title(dto.getTitle())
+                                .description(dto.getDescription())
+                                .startDate(dto.getStartDate())
+                                .endDate(dto.getEndDate())
+                                .location(dto.getLocation())
+                                .capacity(dto.getCapacity())
+                                .status(dto.getStatus())
+                                .createdBy(createdBy)
+                                .categories(categories)
+                                .build();
+        }
+
+        public void updateEntity(
+                        Event event,
+                        EventRequestDTO dto,
+                        Set<Category> categories) {
+                event.setTitle(dto.getTitle());
+                event.setDescription(dto.getDescription());
+                event.setStartDate(dto.getStartDate());
+                event.setEndDate(dto.getEndDate());
+                event.setLocation(dto.getLocation());
+                event.setCapacity(dto.getCapacity());
+                event.setStatus(dto.getStatus());
+                event.setCategories(categories);
+
+                event.getCategories().clear();
+                event.getCategories().addAll(categories);
+        }
+
+        public EventResponseDTO toResponse(Event event) {
+                return EventResponseDTO.builder()
+                                .id(event.getId())
+                                .title(event.getTitle())
+                                .description(event.getDescription())
+                                .startDate(event.getStartDate())
+                                .endDate(event.getEndDate())
+                                .location(event.getLocation())
+                                .capacity(event.getCapacity())
+                                .status(event.getStatus())
+                                .createdById(event.getCreatedBy().getId())
+                                .registeredUserIds(event.getRegistrations()
+                                                .stream()
+                                                .map(registration -> registration.getUser().getId())
+                                                .collect(Collectors.toSet()))
+                                .categoryIds(event.getCategories()
+                                                .stream()
+                                                .map(category -> category.getId())
+                                                .collect(Collectors.toSet()))
+                                .build();
+        }
+
+        public EventSimpleDTO toSimple(Event event) {
+                return EventSimpleDTO.builder()
+                                .id(event.getId())
+                                .title(event.getTitle())
+                                .startDate(event.getStartDate())
+                                .endDate(event.getEndDate())
+                                .status(event.getStatus())
+                                .build();
+        }
+}

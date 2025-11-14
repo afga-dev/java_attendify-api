@@ -7,7 +7,6 @@ import com.attendify.attendify_api.auth.model.Token;
 import com.attendify.attendify_api.event.model.EventRegistration;
 import com.attendify.attendify_api.shared.core.AuditableEntity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -60,10 +59,10 @@ public class User extends AuditableEntity {
     private Set<Role> roles = new HashSet<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<Token> tokens = new HashSet<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<EventRegistration> registrations = new HashSet<>();
 }

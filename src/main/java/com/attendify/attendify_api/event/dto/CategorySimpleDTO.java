@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CategoryResponseDTO {
+public class CategorySimpleDTO {
     private Long id;
     private String name;
-    private String description;
 }

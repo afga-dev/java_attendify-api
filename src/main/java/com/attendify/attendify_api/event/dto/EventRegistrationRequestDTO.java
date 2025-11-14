@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class EventRegistrationRequestDTO {
-    @NotNull
+    @NotNull(message = "Event ID is required")
     private Long eventId;
 }

@@ -5,9 +5,11 @@ import java.util.Set;
 
 import com.attendify.attendify_api.event.model.EventStatus;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class EventResponseDTO {
     private Long id;
     private String title;
@@ -17,7 +19,7 @@ public class EventResponseDTO {
     private String location;
     private Integer capacity;
     private EventStatus status;
-    private Long CreatedBy;
-    private Set<Long> registrationId;
-    private Set<Long> categoryId;
+    private Long createdById;
+    private Set<Long> registeredUserIds;
+    private Set<Long> categoryIds;
 }

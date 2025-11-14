@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Data
 public class CategoryRequestDTO {
-    @NotBlank
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotBlank
+    @NotBlank(message = "Description is required")
     private String description;
 }
