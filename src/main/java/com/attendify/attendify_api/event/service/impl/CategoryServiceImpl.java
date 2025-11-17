@@ -1,0 +1,78 @@
+package com.attendify.attendify_api.event.service.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.attendify.attendify_api.event.dto.CategoryRequestDTO;
+import com.attendify.attendify_api.event.dto.CategoryResponseDTO;
+import com.attendify.attendify_api.event.dto.CategorySimpleDTO;
+import com.attendify.attendify_api.event.mapper.CategoryMapper;
+import com.attendify.attendify_api.event.model.Category;
+import com.attendify.attendify_api.event.repository.CategoryRepository;
+import com.attendify.attendify_api.event.service.CategoryService;
+import com.attendify.attendify_api.shared.exception.DuplicateException;
+import com.attendify.attendify_api.shared.exception.NotFoundException;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CategoryServiceImpl implements CategoryService {
+    private final CategoryMapper categoryMapper;
+    private final CategoryRepository categoryRepository;
+
+    @Override
+    @Transactional
+    public CategoryResponseDTO create(CategoryRequestDTO dto) {
+        Category category = categoryMapper.toEntity(dto);
+
+        if (categoryRepository.findByName(dto.getName()).isPresent()) {
+            throw new DuplicateException("Category with name '" + dto.getName() + "' already exists");
+        }
+
+        categoryRepository.save(category);
+
+        return categoryMapper.toResponse(category);
+    }
+
+    @Override
+    @Transactional
+    public CategoryResponseDTO update(Long id, CategoryRequestDTO dto) {
+        Category category = getCategoryOrElseThrow(id);
+
+        categoryMapper.updateEntity(category, dto);
+
+        return categoryMapper.toResponse(category);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Category category = getCategoryOrElseThrow(id);
+
+        categoryRepository.delete(category);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CategoryResponseDTO findById(Long id) {
+        Category category = getCategoryOrElseThrow(id);
+
+        return categoryMapper.toResponse(category);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategorySimpleDTO> findAll() {
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toSimple)
+                .toList();
+    }
+
+    private Category getCategoryOrElseThrow(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Category with id '" + id + "' not found"));
+    }
+}

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.attendify.attendify_api.shared.core.AuditableEntity;
 import com.attendify.attendify_api.user.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -75,10 +76,12 @@ public class Event extends AuditableEntity {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
+    @JsonIgnore
     @Builder.Default
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
     private Set<EventRegistration> registrations = new HashSet<>();
 
+    @JsonIgnore
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "event_categories", joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))

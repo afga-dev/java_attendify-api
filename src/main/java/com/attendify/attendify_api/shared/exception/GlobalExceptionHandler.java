@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
                                 status.getReasonPhrase(),
                                 message);
 
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+                return ResponseEntity.status(status).body(errorResponse);
         }
 
         @ExceptionHandler(BadCredentialsException.class)
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
                                 status.getReasonPhrase(),
                                 ex.getMessage());
 
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+                return ResponseEntity.status(status).body(errorResponse);
         }
 
         @ExceptionHandler(IllegalArgumentException.class)
@@ -54,6 +54,45 @@ public class GlobalExceptionHandler {
                                 status.getReasonPhrase(),
                                 ex.getMessage());
 
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+                return ResponseEntity.status(status).body(errorResponse);
+        }
+
+        @ExceptionHandler(NotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleNotFoundException(
+                        NotFoundException ex,
+                        HttpServletRequest request) {
+                var status = HttpStatus.NOT_FOUND;
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getMessage());
+
+                return ResponseEntity.status(status).body(errorResponse);
+        }
+
+        @ExceptionHandler(BadRequestException.class)
+        public ResponseEntity<ErrorResponse> handleBadRequestException(
+                        NotFoundException ex,
+                        HttpServletRequest request) {
+                var status = HttpStatus.BAD_REQUEST;
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getMessage());
+
+                return ResponseEntity.status(status).body(errorResponse);
+        }
+
+        @ExceptionHandler(DuplicateException.class)
+        public ResponseEntity<ErrorResponse> handleDuplicateException(
+                        NotFoundException ex,
+                        HttpServletRequest request) {
+                var status = HttpStatus.CONFLICT;
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getMessage());
+
+                return ResponseEntity.status(status).body(errorResponse);
         }
 }

@@ -1,0 +1,122 @@
+package com.attendify.attendify_api.event.service.impl;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.attendify.attendify_api.event.dto.EventRequestDTO;
+import com.attendify.attendify_api.event.dto.EventResponseDTO;
+import com.attendify.attendify_api.event.dto.EventSimpleDTO;
+import com.attendify.attendify_api.event.mapper.EventMapper;
+import com.attendify.attendify_api.event.model.Category;
+import com.attendify.attendify_api.event.model.Event;
+import com.attendify.attendify_api.event.repository.CategoryRepository;
+import com.attendify.attendify_api.event.repository.EventRepository;
+import com.attendify.attendify_api.event.service.EventService;
+import com.attendify.attendify_api.shared.exception.NotFoundException;
+import com.attendify.attendify_api.user.model.User;
+import com.attendify.attendify_api.user.repository.UserRepository;
+import com.attendify.attendify_api.user.security.CustomUserDetails;
+
+import jakarta.validation.ValidationException;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class EventServiceImpl implements EventService {
+    private final EventMapper eventMapper;
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+
+    @Override
+    @Transactional
+    public EventResponseDTO create(EventRequestDTO dto) {
+        Long userId = getAuthenticatedUserId();
+        User createdBy = getUserOrElseThrow(userId);
+        Set<Category> categories = getCategoriesFromIds(dto.getCategoryIds());
+
+        if (dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new ValidationException("End date must be after start date");
+        }
+
+        Event entity = eventMapper.toEntity(dto, createdBy, categories);
+
+        Event event = eventRepository.save(entity);
+
+        return eventMapper.toResponse(event);
+    }
+
+    @Override
+    @Transactional
+    public EventResponseDTO update(Long id, EventRequestDTO dto) {
+        Event event = getEventOrElseThrow(id);
+        Set<Category> categories = getCategoriesFromIds(dto.getCategoryIds());
+
+        eventMapper.updateEntity(event, dto, categories);
+
+        return eventMapper.toResponse(event);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Event event = getEventOrElseThrow(id);
+
+        eventRepository.delete(event);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EventResponseDTO findById(Long id) {
+        Event event = getEventOrElseThrow(id);
+
+        return eventMapper.toResponse(event);
+    }
+
+    @Override
+    public List<EventSimpleDTO> findAll() {
+        return eventRepository.findAll()
+                .stream()
+                .map(eventMapper::toSimple)
+                .toList();
+    }
+
+    @Override
+    public List<EventSimpleDTO> findByCategory(Long categoryId) {
+        return eventRepository.findByCategories_Id(categoryId)
+                .stream()
+                .map(eventMapper::toSimple)
+                .toList();
+    }
+
+    private Long getAuthenticatedUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        var principal = (CustomUserDetails) authentication.getPrincipal();
+        return principal.getId();
+    }
+
+    private User getUserOrElseThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found"));
+    }
+
+    private Event getEventOrElseThrow(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Event with id '" + id + "' not found"));
+    }
+
+    private Set<Category> getCategoriesFromIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty())
+            return Set.of();
+
+        return ids.stream()
+                .map(id -> categoryRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Category with id '" + id + "' not found")))
+                .collect(Collectors.toSet());
+    }
+}

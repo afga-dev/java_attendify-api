@@ -1,20 +1,32 @@
 package com.attendify.attendify_api.event.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.attendify.attendify_api.event.model.Event;
 import com.attendify.attendify_api.event.model.EventRegistration;
-import com.attendify.attendify_api.user.model.User;
 import java.util.List;
 
 @Repository
 public interface EventRegistrationRepository extends JpaRepository<EventRegistration, Long> {
-    Optional<EventRegistration> findByUserAndEvent(User user, Event event);
+    Boolean existsByUser_IdAndEvent_Id(Long userId, Long eventId);
 
-    List<EventRegistration> findByUser(User user);
+    long countByEvent_Id(Long eventId);
 
-    List<EventRegistration> findByEvent(Event event);
+    @Query("""
+                SELECT er FROM EventRegistration er
+                JOIN FETCH er.user
+                JOIN FETCH er.event
+                WHERE er.event.id = :id
+            """)
+    List<EventRegistration> findByEvent_IdFetch(@Param("id") Long id);
+
+    @Query("""
+                SELECT er FROM EventRegistration er
+                JOIN FETCH er.user
+                JOIN FETCH er.event
+                WHERE er.user.id = :userId
+            """)
+    List<EventRegistration> findByUser_IdFetch(@Param("userId") Long userId);
 }

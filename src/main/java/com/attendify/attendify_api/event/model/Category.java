@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.attendify.attendify_api.shared.core.AuditableEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,6 +42,7 @@ public class Category extends AuditableEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @JsonIgnore
     @Builder.Default
     @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
     private Set<Event> events = new HashSet<>();

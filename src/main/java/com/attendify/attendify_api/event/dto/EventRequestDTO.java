@@ -6,6 +6,7 @@ import java.util.Set;
 import com.attendify.attendify_api.event.model.EventStatus;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -32,5 +33,6 @@ public class EventRequestDTO {
     @NotNull(message = "Status is required")
     private EventStatus status;
 
-    private Set<Long> categoryId;
+    @NotEmpty(message = "Event must have at least one category")
+    private Set<Long> categoryIds;
 }

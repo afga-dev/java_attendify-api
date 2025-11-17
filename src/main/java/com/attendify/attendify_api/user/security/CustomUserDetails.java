@@ -17,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 public class CustomUserDetails implements UserDetails {
     private final User user;
 
+    public Long getId(){
+        return user.getId();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream()

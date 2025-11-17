@@ -1,0 +1,120 @@
+package com.attendify.attendify_api.event.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.attendify.attendify_api.event.dto.EventRegistrationRequestDTO;
+import com.attendify.attendify_api.event.dto.EventRegistrationResponseDTO;
+import com.attendify.attendify_api.event.mapper.EventRegistrationMapper;
+import com.attendify.attendify_api.event.model.Event;
+import com.attendify.attendify_api.event.model.EventRegistration;
+import com.attendify.attendify_api.event.repository.EventRegistrationRepository;
+import com.attendify.attendify_api.event.repository.EventRepository;
+import com.attendify.attendify_api.event.service.EventRegistrationService;
+import com.attendify.attendify_api.shared.exception.BadRequestException;
+import com.attendify.attendify_api.shared.exception.NotFoundException;
+import com.attendify.attendify_api.user.model.User;
+import com.attendify.attendify_api.user.repository.UserRepository;
+import com.attendify.attendify_api.user.security.CustomUserDetails;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class EventRegistrationServiceImpl implements EventRegistrationService {
+    private final EventRegistrationMapper eventRegistrationMapper;
+    private final EventRegistrationRepository eventRegistrationRepository;
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+
+    @Override
+    @Transactional
+    public EventRegistrationResponseDTO create(EventRegistrationRequestDTO dto) {
+        Long userId = getAuthenticatedUserId();
+        User user = getUserOrElseThrow(userId);
+        Event event = getEventOrElseThrow(dto.getEventId());
+
+        Boolean alreadyRegistred = eventRegistrationRepository.existsByUser_IdAndEvent_Id(user.getId(), event.getId());
+        if (alreadyRegistred) {
+            throw new BadRequestException("User is already registered for this event");
+        }
+
+        if (event.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Cannot register for a past event");
+        }
+
+        long currentRegistrations = eventRegistrationRepository.countByEvent_Id(event.getId());
+        if (currentRegistrations >= event.getCapacity()) {
+            throw new BadRequestException("Event is at full capacity");
+        }
+
+        EventRegistration eventRegistration = eventRegistrationMapper.toEntity(user, event);
+
+        eventRegistrationRepository.save(eventRegistration);
+
+        return eventRegistrationMapper.toResponse(eventRegistration);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        EventRegistration eventRegistration = getEventRegistrationOrElseThrow(id);
+
+        eventRegistrationRepository.delete(eventRegistration);
+    }
+
+    @Override
+    @Transactional
+    public EventRegistrationResponseDTO checkIn(Long id) {
+        EventRegistration eventRegistration = getEventRegistrationOrElseThrow(id);
+
+        eventRegistration.setCheckedIn(true);
+
+        return eventRegistrationMapper.toResponse(eventRegistration);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventRegistrationResponseDTO> getUserByEvent(Long id) {
+        return eventRegistrationRepository.findByEvent_IdFetch(id)
+                .stream()
+                .map(eventRegistrationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventRegistrationResponseDTO> getMyEvents() {
+        Long userId = getAuthenticatedUserId();
+
+        return eventRegistrationRepository.findByUser_IdFetch(userId)
+                .stream()
+                .map(eventRegistrationMapper::toResponse)
+                .toList();
+    }
+
+    private Long getAuthenticatedUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        var principal = (CustomUserDetails) authentication.getPrincipal();
+        return principal.getId();
+    }
+
+    private User getUserOrElseThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found"));
+    }
+
+    private Event getEventOrElseThrow(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Event with id '" + id + "' not found"));
+    }
+
+    private EventRegistration getEventRegistrationOrElseThrow(Long id) {
+        return eventRegistrationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registrarion with id '" + id + "' not found"));
+    }
+}

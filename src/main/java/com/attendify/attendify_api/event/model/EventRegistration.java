@@ -43,7 +43,8 @@ public class EventRegistration extends AuditableEntity {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
+    @Builder.Default
     @NotNull
     @Column(nullable = false)
-    Boolean checkedIn;
+    private Boolean checkedIn = false;
 }

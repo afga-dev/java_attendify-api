@@ -16,7 +16,7 @@ import com.attendify.attendify_api.event.model.Category;
 public class EventMapper {
         public Event toEntity(
                         EventRequestDTO dto,
-                        User createdBy,
+                        User user,
                         Set<Category> categories) {
                 return Event.builder()
                                 .title(dto.getTitle())
@@ -26,7 +26,7 @@ public class EventMapper {
                                 .location(dto.getLocation())
                                 .capacity(dto.getCapacity())
                                 .status(dto.getStatus())
-                                .createdBy(createdBy)
+                                .createdBy(user)
                                 .categories(categories)
                                 .build();
         }
@@ -42,7 +42,6 @@ public class EventMapper {
                 event.setLocation(dto.getLocation());
                 event.setCapacity(dto.getCapacity());
                 event.setStatus(dto.getStatus());
-                event.setCategories(categories);
 
                 event.getCategories().clear();
                 event.getCategories().addAll(categories);
