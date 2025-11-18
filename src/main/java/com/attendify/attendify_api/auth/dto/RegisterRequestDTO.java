@@ -2,6 +2,7 @@ package com.attendify.attendify_api.auth.dto;
 
 import java.util.Set;
 
+import com.attendify.attendify_api.shared.validation.Sanitize;
 import com.attendify.attendify_api.user.model.Role;
 
 import jakarta.validation.constraints.Email;
@@ -19,10 +20,12 @@ import lombok.NoArgsConstructor;
 public class RegisterRequestDTO {
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
+    @Sanitize
     private String email;
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
+    @Sanitize
     private String password;
 
     private Set<Role> roles;

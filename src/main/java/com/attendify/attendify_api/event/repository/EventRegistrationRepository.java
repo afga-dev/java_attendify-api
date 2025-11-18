@@ -18,9 +18,9 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
                 SELECT er FROM EventRegistration er
                 JOIN FETCH er.user
                 JOIN FETCH er.event
-                WHERE er.event.id = :id
+                WHERE er.event.id = :eventId
             """)
-    List<EventRegistration> findByEvent_IdFetch(@Param("id") Long id);
+    List<EventRegistration> findByEvent_IdFetch(@Param("eventId") Long id);
 
     @Query("""
                 SELECT er FROM EventRegistration er

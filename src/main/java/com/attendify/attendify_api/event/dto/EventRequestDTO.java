@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import com.attendify.attendify_api.event.model.EventStatus;
+import com.attendify.attendify_api.shared.validation.Sanitize;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -13,9 +14,11 @@ import lombok.Data;
 @Data
 public class EventRequestDTO {
     @NotBlank(message = "Title is required")
+    @Sanitize
     private String title;
 
     @NotBlank(message = "Description is required")
+    @Sanitize
     private String description;
 
     @NotNull(message = "Start date is required")
@@ -25,6 +28,7 @@ public class EventRequestDTO {
     private LocalDateTime endDate;
 
     @NotBlank(message = "Location is required")
+    @Sanitize
     private String location;
 
     @NotNull(message = "Capacity is required")

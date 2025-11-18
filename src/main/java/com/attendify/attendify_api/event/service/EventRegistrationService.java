@@ -12,7 +12,7 @@ public interface EventRegistrationService {
 
     EventRegistrationResponseDTO checkIn(Long id);
 
-    List<EventRegistrationResponseDTO> getUserByEvent(Long id);
+    List<EventRegistrationResponseDTO> getUsersByEvent(Long id);
 
     List<EventRegistrationResponseDTO> getMyEvents();
 }

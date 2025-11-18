@@ -1,5 +1,6 @@
 package com.attendify.attendify_api.shared.config;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,8 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/attendify/v1/auth/**")
                                                 .permitAll()
+                                                .requestMatchers("/error")
+                                                .permitAll()
                                                 .anyRequest()
                                                 .authenticated())
                                 .sessionManagement(session -> session
@@ -55,30 +58,30 @@ public class SecurityConfig {
                                 .authenticationProvider(authenticationProvider)
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                                 .exceptionHandling(ex -> ex
-                                                .authenticationEntryPoint((request, response, e) -> {
-                                                        response.setContentType("application/json");
-                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-                                                        var body = ErrorResponse.of(
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        writeError(response,
                                                                         HttpServletResponse.SC_UNAUTHORIZED,
                                                                         "Unauthorized",
                                                                         "Invalid or expired token");
-
-                                                        response.getWriter()
-                                                                        .write(objectMapper.writeValueAsString(body));
                                                 })
                                                 .accessDeniedHandler((request, response, e) -> {
-                                                        response.setContentType("application/json");
-                                                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
-                                                        var body = ErrorResponse.of(
-                                                                        HttpServletResponse.SC_FORBIDDEN,
+                                                        writeError(response, HttpServletResponse.SC_FORBIDDEN,
                                                                         "Forbidden",
                                                                         "You don’t have permission to access this resource");
-
-                                                        response.getWriter()
-                                                                        .write(objectMapper.writeValueAsString(body));
                                                 }))
                                 .build();
         }
+
+        private void writeError(
+                        HttpServletResponse response,
+                        int status,
+                        String error,
+                        String message) throws IOException {
+                var body = ErrorResponse.of(status, error, message);
+
+                response.setContentType("application/json");
+                response.setStatus(status);
+                response.getWriter().write(objectMapper.writeValueAsString(body));
+        }
+
 }

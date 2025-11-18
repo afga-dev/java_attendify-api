@@ -64,7 +64,7 @@ public class EventMapper {
                                                 .collect(Collectors.toSet()))
                                 .categoryIds(event.getCategories()
                                                 .stream()
-                                                .map(category -> category.getId())
+                                                .map(Category::getId)
                                                 .collect(Collectors.toSet()))
                                 .build();
         }

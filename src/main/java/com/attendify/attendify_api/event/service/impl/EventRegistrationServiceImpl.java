@@ -79,7 +79,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EventRegistrationResponseDTO> getUserByEvent(Long id) {
+    public List<EventRegistrationResponseDTO> getUsersByEvent(Long id) {
         return eventRegistrationRepository.findByEvent_IdFetch(id)
                 .stream()
                 .map(eventRegistrationMapper::toResponse)
