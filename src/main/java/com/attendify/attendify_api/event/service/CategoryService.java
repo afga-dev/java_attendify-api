@@ -14,7 +14,13 @@ public interface CategoryService {
 
     void delete(Long id);
 
+    void restore(Long id);
+
     CategoryResponseDTO findById(Long id);
 
     PageResponseDTO<CategorySimpleDTO> findAll(Pageable pageable);
+
+    PageResponseDTO<CategorySimpleDTO> findAllDeleted(Pageable pageable);
+
+    PageResponseDTO<CategorySimpleDTO> findAllIncludingDeleted(Pageable pageable);
 }

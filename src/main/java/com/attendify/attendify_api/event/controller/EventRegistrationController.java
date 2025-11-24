@@ -43,6 +43,14 @@ public class EventRegistrationController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreRegistration(
+            @PathVariable Long id) {
+        eventRegistrationService.restore(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/check-in")
     public ResponseEntity<EventRegistrationResponseDTO> checkIn(
             @PathVariable Long id) {
@@ -61,5 +69,17 @@ public class EventRegistrationController {
     @GetMapping("/my")
     public ResponseEntity<PageResponseDTO<EventRegistrationResponseDTO>> getMyEvents(Pageable pageable) {
         return ResponseEntity.ok(eventRegistrationService.getMyEvents(pageable));
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<PageResponseDTO<EventRegistrationResponseDTO>> getAllEventRegistrationsDeleted(
+            Pageable pageable) {
+        return ResponseEntity.ok(eventRegistrationService.findAllDeleted(pageable));
+    }
+
+    @GetMapping("/including-deleted")
+    public ResponseEntity<PageResponseDTO<EventRegistrationResponseDTO>> getAllEventRegistrationsIncludingDeleted(
+            Pageable pageable) {
+        return ResponseEntity.ok(eventRegistrationService.findAllIncludingDeleted(pageable));
     }
 }

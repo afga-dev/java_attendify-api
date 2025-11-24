@@ -15,9 +15,15 @@ public interface EventService {
 
     void delete(Long id);
 
+    void restore(Long id);
+
     EventResponseDTO findById(Long id);
 
     PageResponseDTO<EventSimpleDTO> findAll(EventFilter EventFilter, Pageable pageable);
 
     PageResponseDTO<EventSimpleDTO> findByCategory(Long categoryId, Pageable pageable);
+
+    PageResponseDTO<EventSimpleDTO> findAllDeleted(Pageable pageable);
+
+    PageResponseDTO<EventSimpleDTO> findAllIncludingDeleted(Pageable pageable);
 }

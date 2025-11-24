@@ -54,6 +54,14 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreEvent(
+            @PathVariable Long id) {
+        eventService.restore(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<EventResponseDTO> getEvent(
             @PathVariable Long id) {
@@ -72,5 +80,17 @@ public class EventController {
             @PathVariable Long id,
             Pageable pageable) {
         return ResponseEntity.ok(eventService.findByCategory(id, pageable));
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<PageResponseDTO<EventSimpleDTO>> getAllEventsDeleted(
+            Pageable pageable) {
+        return ResponseEntity.ok(eventService.findAllDeleted(pageable));
+    }
+
+    @GetMapping("/including-deleted")
+    public ResponseEntity<PageResponseDTO<EventSimpleDTO>> getByCategoryIncludingDeleted(
+            Pageable pageable) {
+        return ResponseEntity.ok(eventService.findAllIncludingDeleted(pageable));
     }
 }

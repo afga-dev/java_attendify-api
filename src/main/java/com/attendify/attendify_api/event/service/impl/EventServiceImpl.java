@@ -53,7 +53,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventResponseDTO update(Long id, EventRequestDTO dto) {
+    public EventResponseDTO update(
+            Long id,
+            EventRequestDTO dto) {
         Event event = getEventOrElseThrow(id);
         Set<Category> categories = getCategoriesFromIds(dto.getCategoryIds());
 
@@ -65,10 +67,27 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Event event = getEventOrElseThrow(id);
+        Event event = getEventIncludingDeletedOrElseThrow(id);
+
+        if (event.getDeleteAt() != null)
+            throw new IllegalStateException("Event is deleted");
 
         Long userId = auditorAware.getCurrentAuditor().orElse(null);
+
         event.softDelete(userId);
+
+        eventRepository.save(event);
+    }
+
+    @Override
+    @Transactional
+    public void restore(Long id) {
+        Event event = getEventIncludingDeletedOrElseThrow(id);
+
+        if (event.getDeleteAt() == null)
+            throw new IllegalStateException("Event is not deleted");
+
+        event.restore();
 
         eventRepository.save(event);
     }
@@ -83,7 +102,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<EventSimpleDTO> findAll(EventFilter eventFilter, Pageable pageable) {
+    public PageResponseDTO<EventSimpleDTO> findAll(
+            EventFilter eventFilter,
+            Pageable pageable) {
         Page<Event> page = eventRepository.findAll(eventSpecification.build(eventFilter), pageable);
 
         return eventMapper.toPageResponse(page);
@@ -91,14 +112,39 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<EventSimpleDTO> findByCategory(Long categoryId, Pageable pageable) {
+    public PageResponseDTO<EventSimpleDTO> findByCategory(
+            Long categoryId,
+            Pageable pageable) {
         Page<Event> page = eventRepository.findByCategories_Id(categoryId, pageable);
+
+        return eventMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EventSimpleDTO> findAllDeleted(
+            Pageable pageable) {
+        Page<Event> page = eventRepository.findAllDeleted(pageable);
+
+        return eventMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EventSimpleDTO> findAllIncludingDeleted(
+            Pageable pageable) {
+        Page<Event> page = eventRepository.findAllIncludingDeleted(pageable);
 
         return eventMapper.toPageResponse(page);
     }
 
     private Event getEventOrElseThrow(Long id) {
         return eventRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Event with id '" + id + "' not found"));
+    }
+
+    private Event getEventIncludingDeletedOrElseThrow(Long id) {
+        return eventRepository.findByIdIncludingDeleted(id)
                 .orElseThrow(() -> new NotFoundException("Event with id '" + id + "' not found"));
     }
 

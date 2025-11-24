@@ -66,10 +66,27 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     @Override
     @Transactional
     public void delete(Long id) {
-        EventRegistration eventRegistration = getEventRegistrationOrElseThrow(id);
+        EventRegistration eventRegistration = getEventRegistrationIncludingDeletedOrElseThrow(id);
+
+        if (eventRegistration.getDeleteAt() != null)
+            throw new IllegalStateException("Event registration is deleted");
 
         Long userId = auditorAware.getCurrentAuditor().orElse(null);
+
         eventRegistration.softDelete(userId);
+
+        eventRegistrationRepository.save(eventRegistration);
+    }
+
+    @Override
+    @Transactional
+    public void restore(Long id) {
+        EventRegistration eventRegistration = getEventRegistrationIncludingDeletedOrElseThrow(id);
+
+        if (eventRegistration.getDeleteAt() == null)
+            throw new IllegalStateException("Event registration is not deleted");
+
+        eventRegistration.restore();
 
         eventRegistrationRepository.save(eventRegistration);
     }
@@ -86,7 +103,9 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<EventRegistrationResponseDTO> getUsersByEvent(Long id, Pageable pageable) {
+    public PageResponseDTO<EventRegistrationResponseDTO> getUsersByEvent(
+            Long id,
+            Pageable pageable) {
         Page<EventRegistration> page = eventRegistrationRepository.findByEvent_IdFetch(id, pageable);
 
         return eventRegistrationMapper.toPageResponse(page);
@@ -94,10 +113,29 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<EventRegistrationResponseDTO> getMyEvents(Pageable pageable) {
+    public PageResponseDTO<EventRegistrationResponseDTO> getMyEvents(
+            Pageable pageable) {
         Long userId = getAuthenticatedUserId();
 
         Page<EventRegistration> page = eventRegistrationRepository.findByUser_IdFetch(userId, pageable);
+
+        return eventRegistrationMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EventRegistrationResponseDTO> findAllDeleted(
+            Pageable pageable) {
+        Page<EventRegistration> page = eventRegistrationRepository.findAllDeleted(pageable);
+
+        return eventRegistrationMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EventRegistrationResponseDTO> findAllIncludingDeleted(
+            Pageable pageable) {
+        Page<EventRegistration> page = eventRegistrationRepository.findAllIncludingDeleted(pageable);
 
         return eventRegistrationMapper.toPageResponse(page);
     }
@@ -120,6 +158,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     private EventRegistration getEventRegistrationOrElseThrow(Long id) {
         return eventRegistrationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registrarion with id '" + id + "' not found"));
+    }
+
+    private EventRegistration getEventRegistrationIncludingDeletedOrElseThrow(Long id) {
+        return eventRegistrationRepository.findByIdIncludingDeleted(id)
                 .orElseThrow(() -> new NotFoundException("Registrarion with id '" + id + "' not found"));
     }
 }

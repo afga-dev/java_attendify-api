@@ -22,7 +22,8 @@ public class SoftDeletableEntity extends AuditableEntity {
         this.deleteBy = userId;
     }
 
-    public boolean isDeleted() {
-        return deleteAt != null;
+    public void restore() {
+        this.deleteAt = null;
+        this.deleteBy = null;
     }
 }

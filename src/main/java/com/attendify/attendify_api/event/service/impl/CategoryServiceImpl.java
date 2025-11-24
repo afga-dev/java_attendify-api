@@ -42,7 +42,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryResponseDTO update(Long id, CategoryRequestDTO dto) {
+    public CategoryResponseDTO update(
+            Long id,
+            CategoryRequestDTO dto) {
         Category category = getCategoryOrElseThrow(id);
 
         categoryMapper.updateEntity(category, dto);
@@ -53,10 +55,27 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Category category = getCategoryOrElseThrow(id);
+        Category category = getCategoryIncludingDeletedOrElseThrow(id);
+
+        if (category.getDeleteAt() != null)
+            throw new IllegalStateException("Category is deleted");
 
         Long userId = auditorAware.getCurrentAuditor().orElse(null);
+
         category.softDelete(userId);
+
+        categoryRepository.save(category);
+    }
+
+    @Override
+    @Transactional
+    public void restore(Long id) {
+        Category category = getCategoryIncludingDeletedOrElseThrow(id);
+
+        if (category.getDeleteAt() == null)
+            throw new IllegalStateException("Category is not deleted");
+
+        category.restore();
 
         categoryRepository.save(category);
     }
@@ -71,14 +90,38 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<CategorySimpleDTO> findAll(Pageable pageable) {
+    public PageResponseDTO<CategorySimpleDTO> findAll(
+            Pageable pageable) {
         Page<Category> page = categoryRepository.findAll(pageable);
+
+        return categoryMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<CategorySimpleDTO> findAllDeleted(
+            Pageable pageable) {
+        Page<Category> page = categoryRepository.findAllDeleted(pageable);
+
+        return categoryMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<CategorySimpleDTO> findAllIncludingDeleted(
+            Pageable pageable) {
+        Page<Category> page = categoryRepository.findAllIncludingDeleted(pageable);
 
         return categoryMapper.toPageResponse(page);
     }
 
     private Category getCategoryOrElseThrow(Long id) {
         return categoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Category with id '" + id + "' not found"));
+    }
+
+    private Category getCategoryIncludingDeletedOrElseThrow(Long id) {
+        return categoryRepository.findByIdIncludingDeleted(id)
                 .orElseThrow(() -> new NotFoundException("Category with id '" + id + "' not found"));
     }
 }

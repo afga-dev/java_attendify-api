@@ -53,6 +53,14 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreCategory(
+            @PathVariable Long id) {
+        categoryService.restore(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponseDTO> getCategory(
             @PathVariable Long id) {
@@ -60,7 +68,20 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponseDTO<CategorySimpleDTO>> getAllCategories(Pageable pageable) {
+    public ResponseEntity<PageResponseDTO<CategorySimpleDTO>> getAllCategories(
+            Pageable pageable) {
         return ResponseEntity.ok(categoryService.findAll(pageable));
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<PageResponseDTO<CategorySimpleDTO>> getAllCategoriesDeleted(
+            Pageable pageable) {
+        return ResponseEntity.ok(categoryService.findAllDeleted(pageable));
+    }
+
+    @GetMapping("/including-deleted")
+    public ResponseEntity<PageResponseDTO<CategorySimpleDTO>> getAllCategoriesIncludingDeleted(
+            Pageable pageable) {
+        return ResponseEntity.ok(categoryService.findAllIncludingDeleted(pageable));
     }
 }

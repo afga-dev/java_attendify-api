@@ -109,4 +109,16 @@ public class GlobalExceptionHandler {
 
                 return ResponseEntity.status(status).body(errorResponse);
         }
+
+        @ExceptionHandler(IllegalStateException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalStateException(
+                        IllegalStateException ex) {
+                var status = HttpStatus.CONFLICT;
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                status.value(),
+                                status.getReasonPhrase(),
+                                ex.getMessage());
+
+                return ResponseEntity.status(status).body(errorResponse);
+        }
 }

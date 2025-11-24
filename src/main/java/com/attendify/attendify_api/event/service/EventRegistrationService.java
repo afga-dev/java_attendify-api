@@ -11,9 +11,15 @@ public interface EventRegistrationService {
 
     void delete(Long id);
 
+    void restore(Long id);
+
     EventRegistrationResponseDTO checkIn(Long id);
 
     PageResponseDTO<EventRegistrationResponseDTO> getUsersByEvent(Long id, Pageable pageable);
 
     PageResponseDTO<EventRegistrationResponseDTO> getMyEvents(Pageable pageable);
+
+    PageResponseDTO<EventRegistrationResponseDTO> findAllDeleted(Pageable pageable);
+
+    PageResponseDTO<EventRegistrationResponseDTO> findAllIncludingDeleted(Pageable pageable);
 }

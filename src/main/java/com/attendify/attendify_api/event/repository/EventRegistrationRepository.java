@@ -1,5 +1,7 @@
 package com.attendify.attendify_api.event.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,4 +32,13 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
                 WHERE er.user.id = :userId
             """)
     Page<EventRegistration> findByUser_IdFetch(@Param("userId") Long userId, Pageable pageable);
+
+    @Query(value = "SELECT * FROM event_registrations WHERE event_registration_id = :id", nativeQuery = true)
+    Optional<EventRegistration> findByIdIncludingDeleted(@Param("id") Long id);
+
+    @Query(value = "SELECT * FROM event_registrations WHERE deleted_at IS NOT NULL", nativeQuery = true)
+    Page<EventRegistration> findAllDeleted(Pageable pageable);
+
+    @Query(value = "SELECT * FROM event_registrations", nativeQuery = true)
+    Page<EventRegistration> findAllIncludingDeleted(Pageable pageable);
 }
