@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toPageResponse(page);
     }
 
-    // Helper that fetch an user including soft-deleted
+    // Helper that fetch a user including soft-deleted
     private User getUserWithDeletedOrElseThrow(Long id) {
         return userRepository.findByIdWithDeleted(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));

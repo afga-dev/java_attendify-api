@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    // Fetch an user by ID, including soft-deleted entries
+    // Fetch a user by ID, including soft-deleted entries
     @Query(value = "SELECT * FROM users WHERE user_id = :id", nativeQuery = true)
     Optional<User> findByIdWithDeleted(@Param("id") Long id);
 

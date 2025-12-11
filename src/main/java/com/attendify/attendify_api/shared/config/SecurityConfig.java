@@ -51,8 +51,14 @@ public class SecurityConfig {
                 // Configure endpoint authorization
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/attendify/v1/auth/register", "/attendify/v1/auth/login",
-                                "/attendify/v1/auth/refresh-token")
+                        .requestMatchers(
+                                "/attendify/v1/auth/register-user",
+                                "/attendify/v1/auth/login",
+                                "/attendify/v1/auth/refresh-token",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/error")
                         .permitAll()
                         .requestMatchers("/error")
                         .permitAll()

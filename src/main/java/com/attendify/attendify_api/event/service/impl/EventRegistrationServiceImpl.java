@@ -7,10 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.attendify.attendify_api.event.dto.EventRegistrationAdminRequestDTO;
 import com.attendify.attendify_api.event.dto.EventRegistrationRequestDTO;
 import com.attendify.attendify_api.event.dto.EventRegistrationResponseDTO;
 import com.attendify.attendify_api.event.entity.Event;
 import com.attendify.attendify_api.event.entity.EventRegistration;
+import com.attendify.attendify_api.event.entity.enums.EventStatus;
 import com.attendify.attendify_api.event.mapper.EventRegistrationMapper;
 import com.attendify.attendify_api.event.repository.EventRegistrationRepository;
 import com.attendify.attendify_api.event.repository.EventRepository;
@@ -39,7 +41,10 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     public EventRegistrationResponseDTO create(EventRegistrationRequestDTO dto) {
         Long userId = securityUtils.getAuthenticatedUserId();
         User user = getUserOrElseThrow(userId);
-        Event event = getEventOrElseThrow(dto.eventId());
+        Event event = getEventForUpdateOrElseThrow(dto.eventId());
+
+        if (event.getStatus() != EventStatus.PUBLISHED)
+            throw new BadRequestException("Cannot join at UNPUBLISHED events.");
 
         if (eventRegistrationRepository.existsByUser_IdAndEvent_Id(user.getId(), event.getId()))
             throw new BadRequestException("User is already registered for this event");
@@ -60,15 +65,43 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     @Override
     @Transactional
+    public EventRegistrationResponseDTO createByForce(EventRegistrationAdminRequestDTO dto) {
+        User user = getUserOrElseThrow(dto.userId());
+        Event event = getEventForUpdateOrElseThrow(dto.eventId());
+
+        securityUtils.checkOwnerOrPermission(event.getCreatedBy(), Permission.EVENT_REGISTRATION_FORCE_CREATE,
+                "force register users to this event");
+
+        if (eventRegistrationRepository.existsByUser_IdAndEvent_Id(user.getId(), event.getId()))
+            throw new BadRequestException("User is already registered to this event");
+
+        if (!securityUtils.hasPermission(Permission.EVENT_REGISTRATION_FORCE_CREATE)) {
+            if (event.getEndDate().isBefore(LocalDateTime.now()))
+                throw new BadRequestException("Cannot register for a past event");
+
+            long currentRegistrations = eventRegistrationRepository.countByEvent_Id(event.getId());
+            if (currentRegistrations >= event.getCapacity())
+                throw new BadRequestException("Event is at full capacity");
+        }
+
+        EventRegistration registration = eventRegistrationMapper.toEntity(user, event);
+
+        eventRegistrationRepository.save(registration);
+
+        return eventRegistrationMapper.toResponse(registration);
+    }
+
+    @Override
+    @Transactional
     public void delete(Long id) {
         EventRegistration registration = getEventRegistrationWithDeletedOrElseThrow(id);
-
-        if (registration.getDeletedAt() != null)
-            throw new BadRequestException("Event registration is deleted");
 
         // Verify the current user is the owner or has force delete permission
         securityUtils.checkOwnerOrPermission(registration.getUser().getId(), Permission.EVENT_REGISTRATION_FORCE_DELETE,
                 "delete this registration");
+
+        if (registration.getDeletedAt() != null)
+            throw new BadRequestException("Event registration is deleted");
 
         if (!securityUtils.hasPermission(Permission.EVENT_REGISTRATION_FORCE_DELETE)) {
             if (registration.getCheckedIn())
@@ -101,16 +134,20 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     public EventRegistrationResponseDTO checkIn(Long id) {
         EventRegistration registration = getEventRegistrationOrElseThrow(id);
 
+        // Verify the current user is the owner of the event or has force check-in permission
+        securityUtils.checkOwnerOrPermission(registration.getEvent().getCreatedBy(),
+                Permission.EVENT_REGISTRATION_FORCE_CHECKIN, "check-in this registration");
+
         if (registration.getCheckedIn())
             throw new BadRequestException("User already checked in");
 
-        // Verify the current user is the owner of the event or has force check in permission
-        securityUtils.checkOwnerOrPermission(registration.getEvent().getCreatedBy(),
-                Permission.EVENT_REGISTRATION_FORCE_CHECKIN, "check in this registration");
+        if (!securityUtils.hasPermission(Permission.EVENT_REGISTRATION_FORCE_CHECKIN)) {
+            if (registration.getEvent().getStatus() != EventStatus.PUBLISHED)
+                throw new BadRequestException("Cannot check-in at UNPUBLISHED events.");
 
-        if (!securityUtils.hasPermission(Permission.EVENT_REGISTRATION_FORCE_CHECKIN)
-                && registration.getEvent().getStartDate().isAfter(LocalDateTime.now()))
-            throw new BadRequestException("Cannot check in before event starts");
+            if (registration.getEvent().getStartDate().isAfter(LocalDateTime.now()))
+                throw new BadRequestException("Cannot check-in before event starts");
+        }
 
         registration.setCheckedIn(true);
 
@@ -122,6 +159,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     public PageResponseDTO<EventRegistrationResponseDTO> getUsersByEvent(
             Long id,
             Pageable pageable) {
+        Event event = getEventOrElseThrow(id);
+
+        securityUtils.checkOwnerOrPermission(event.getCreatedBy(), Permission.EVENT_REGISTRATION_FORCE_READ_BY_EVENT,
+                "view registrations for this event");
+
         Page<EventRegistration> page = eventRegistrationRepository.findByEvent_IdFetch(id, pageable);
 
         return eventRegistrationMapper.toPageResponse(page);
@@ -134,6 +176,14 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         Long userId = securityUtils.getAuthenticatedUserId();
 
         Page<EventRegistration> page = eventRegistrationRepository.findByUser_IdFetch(userId, pageable);
+
+        return eventRegistrationMapper.toPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EventRegistrationResponseDTO> findAll(Pageable pageable) {
+        Page<EventRegistration> page = eventRegistrationRepository.findAll(pageable);
 
         return eventRegistrationMapper.toPageResponse(page);
     }
@@ -156,7 +206,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         return eventRegistrationMapper.toPageResponse(page);
     }
 
-    // Helper that fetch an user
+    // Helper that fetch a user
     private User getUserOrElseThrow(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -164,6 +214,12 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     // Helper that fetch an event
     private Event getEventOrElseThrow(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Event not found"));
+    }
+
+    // Helper that fetch an event for update
+    private Event getEventForUpdateOrElseThrow(Long id) {
         return eventRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new NotFoundException("Event not found"));
     }

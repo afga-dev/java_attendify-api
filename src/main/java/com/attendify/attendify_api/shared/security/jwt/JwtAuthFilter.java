@@ -1,13 +1,12 @@
 package com.attendify.attendify_api.shared.security.jwt;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.attendify.attendify_api.shared.security.CustomUserDetails;
@@ -30,12 +29,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
 
     // Paths that should bypass JWT authentication
-    private static final String[] SKIP_PATHS = {
+    private static final List<String> SKIP_PATHS = List.of(
             "/attendify/v1/auth/login",
-            "/attendify/v1/auth/register",
-            "/attendify/v1/auth/refresh",
-            "/error"
-    };
+            "/attendify/v1/auth/register-user",
+            "/attendify/v1/auth/refresh-token",
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/error");
 
     @Override
     protected void doFilterInternal(
@@ -102,11 +102,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     // Check if request path should bypass JWT validation
     private boolean shouldSkip(HttpServletRequest request) {
-        AntPathMatcher matcher = new AntPathMatcher();
         String path = request.getServletPath();
 
-        return Arrays.stream(SKIP_PATHS)
-                .anyMatch(pattern -> matcher.match(pattern, path));
+        return SKIP_PATHS.stream()
+                .anyMatch(path::startsWith);
     }
 
     // Check if Authorization header contains a Bearer token

@@ -2,12 +2,15 @@ package com.attendify.attendify_api.event.service;
 
 import org.springframework.data.domain.Pageable;
 
+import com.attendify.attendify_api.event.dto.EventRegistrationAdminRequestDTO;
 import com.attendify.attendify_api.event.dto.EventRegistrationRequestDTO;
 import com.attendify.attendify_api.event.dto.EventRegistrationResponseDTO;
 import com.attendify.attendify_api.shared.dto.PageResponseDTO;
 
 public interface EventRegistrationService {
     EventRegistrationResponseDTO create(EventRegistrationRequestDTO dto);
+
+    EventRegistrationResponseDTO createByForce(EventRegistrationAdminRequestDTO dto);
 
     void delete(Long id);
 
@@ -18,6 +21,8 @@ public interface EventRegistrationService {
     PageResponseDTO<EventRegistrationResponseDTO> getUsersByEvent(Long id, Pageable pageable);
 
     PageResponseDTO<EventRegistrationResponseDTO> getMyEvents(Pageable pageable);
+
+    PageResponseDTO<EventRegistrationResponseDTO> findAll(Pageable pageable);
 
     PageResponseDTO<EventRegistrationResponseDTO> findAllDeleted(Pageable pageable);
 
